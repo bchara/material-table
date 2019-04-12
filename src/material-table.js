@@ -11,6 +11,7 @@ import MTableGroupbar from './m-table-groupbar';
 import MTableGroupRow from './m-table-group-row';
 import MTableCell from './m-table-cell';
 import MTableEditRow from './m-table-edit-row';
+import MTableEditField from './m-table-edit-field';
 import MTableFilterRow from './m-table-filter-row';
 import MTableHeader from './m-table-header';
 import MTablePagination from './m-table-pagination';
@@ -77,9 +78,9 @@ class MaterialTable extends React.Component {
       this.dataManager.setData(props.data);
     }
 
+    isInit && this.dataManager.changeOrder(defaultSortColumnIndex, defaultSortDirection);
     isInit && this.dataManager.changeCurrentPage(props.options.initialPage ? props.options.initialPage : 0);
     isInit && this.dataManager.changePageSize(props.options.pageSize);
-    isInit && this.dataManager.changeOrder(defaultSortColumnIndex, defaultSortDirection);
     isInit && this.dataManager.changePaging(props.options.paging);
     isInit && this.dataManager.changeParentFunc(props.parentChildData);
     this.dataManager.changeDetailPanelType(props.options.detailPanelType);
@@ -180,7 +181,7 @@ class MaterialTable extends React.Component {
 
   isRemoteData = () => !Array.isArray(this.props.data)
 
-  onQueryChange = (query) => {
+  onQueryChange = (query, callback) => {
     query = { ...this.state.query, ...query };
 
     this.setState({ isLoading: true }, () => {
@@ -192,6 +193,8 @@ class MaterialTable extends React.Component {
           isLoading: false,
           ...this.dataManager.getRenderState(),
           query
+        }, () => {
+          callback && callback();
         });
       });
     });
@@ -259,7 +262,7 @@ class MaterialTable extends React.Component {
                   if (this.isRemoteData()) {
                     const query = { ...this.state.query };
                     query.page = page;
-                    this.onQueryChange(query);
+                    this.onQueryChange(query, () => this.onChangePage(page));
                   }
                   else {
                     this.dataManager.changeCurrentPage(page);
@@ -318,6 +321,7 @@ class MaterialTable extends React.Component {
               exportDelimiter={props.options.exportDelimiter}
               exportFileName={props.options.exportFileName}
               exportCsv={props.options.exportCsv}
+              getFieldValue={this.dataManager.getFieldValue}
               data={this.state.data}
               renderData={this.state.renderData}
               search={props.options.search}
@@ -418,6 +422,7 @@ class MaterialTable extends React.Component {
                         icons={props.icons}
                         renderData={this.state.renderData}
                         currentPage={this.state.currentPage}
+                        initialFormData={props.initialFormData}
                         pageSize={this.state.pageSize}
                         columns={this.state.columns}
                         detailPanel={props.detailPanel}
@@ -440,13 +445,15 @@ class MaterialTable extends React.Component {
                           this.dataManager.changeDetailPanelVisibility(path, render);
                           this.setState(this.dataManager.getRenderState());
                         }}
-                        onGroupExpandChanged={(path) => {
+                        onGroupExpandChanged={(path) => {                          
                           this.dataManager.changeGroupExpand(path);
                           this.setState(this.dataManager.getRenderState());
                         }}
-                        onTreeExpandChanged={(path) => {
+                        onTreeExpandChanged={(path, data) => {                          
                           this.dataManager.changeTreeExpand(path);
-                          this.setState(this.dataManager.getRenderState());
+                          this.setState(this.dataManager.getRenderState(), () => {
+                            this.props.onTreeExpandChange && this.props.onTreeExpandChange(data, data.tableData.isTreeExpanded);
+                          });
                         }}
                         onEditingCanceled={(mode, rowData) => {
                           if (mode === "add") {
@@ -518,6 +525,7 @@ class MaterialTable extends React.Component {
                         showAddRow={this.state.showAddRow}
                         hasAnyEditingRow={!!(this.state.lastEditingRow || this.state.showAddRow)}
                         hasDetailPanel={!!props.detailPanel}
+                        treeDataMaxLevel={this.state.treeDataMaxLevel}
                       />
                     </Table>
                   </div>
@@ -578,6 +586,7 @@ MaterialTable.defaultProps = {
     Body: MTableBody,
     Cell: MTableCell,
     Container: Paper,
+    EditField: MTableEditField,
     EditRow: MTableEditRow,
     FilterRow: MTableFilterRow,
     Groupbar: MTableGroupbar,
@@ -585,7 +594,7 @@ MaterialTable.defaultProps = {
     Header: MTableHeader,
     Pagination: TablePagination,
     Row: MTableBodyRow,
-    Toolbar: MTableToolbar,
+    Toolbar: MTableToolbar    
   },
   data: [],
   icons: {
@@ -613,6 +622,7 @@ MaterialTable.defaultProps = {
   title: 'Table Title',
   options: {
     actionsColumnIndex: 0,
+    addRowPosition: 'last',
     columnsButton: false,
     detailPanelType: 'multiple',
     debounceInterval: 200,
@@ -685,11 +695,12 @@ MaterialTable.propTypes = {
     customSort: PropTypes.func,
     defaultFilter: PropTypes.any,
     defaultSort: PropTypes.oneOf(['asc', 'desc']),
-    grouping: PropTypes.bool,
-    emptyValue: PropTypes.oneOfType([PropTypes.string, PropTypes.node, PropTypes.func]),
+    editComponent: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+    emptyValue: PropTypes.oneOfType([PropTypes.string, PropTypes.node, PropTypes.func]),    
     export: PropTypes.bool,
     field: PropTypes.string,
     filtering: PropTypes.bool,
+    grouping: PropTypes.bool,
     headerStyle: PropTypes.object,
     hidden: PropTypes.bool,
     lookup: PropTypes.object,
@@ -707,6 +718,7 @@ MaterialTable.propTypes = {
     Body: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
     Cell: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
     Container: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+    EditField: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
     EditRow: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
     FilterRow: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
     Groupbar: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
@@ -714,7 +726,7 @@ MaterialTable.propTypes = {
     Header: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
     Pagination: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
     Row: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
-    Toolbar: PropTypes.oneOfType([PropTypes.element, PropTypes.func]),
+    Toolbar: PropTypes.oneOfType([PropTypes.element, PropTypes.func])    
   }),
   data: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.object), PropTypes.func]).isRequired,
   editable: PropTypes.shape({
@@ -758,6 +770,7 @@ MaterialTable.propTypes = {
   title: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
   options: PropTypes.shape({
     actionsColumnIndex: PropTypes.number,
+    addRowPosition: PropTypes.oneOf(['first', 'last']),
     columnsButton: PropTypes.bool,
     defaultExpanded: PropTypes.bool,
     debounceInterval: PropTypes.number,
@@ -800,11 +813,13 @@ MaterialTable.propTypes = {
     header: PropTypes.object,
     body: PropTypes.object
   }),
+  initialFormData: PropTypes.object,
   onSelectionChange: PropTypes.func,
   onChangeRowsPerPage: PropTypes.func,
   onChangePage: PropTypes.func,
   onOrderChange: PropTypes.func,
   onRowClick: PropTypes.func,
+  onTreeExpandChange: PropTypes.func,
   tableRef: PropTypes.any
 };
 
@@ -830,7 +845,7 @@ const styles = theme => ({
 export default withStyles(styles, { withTheme: true })(props => <MaterialTable {...props} ref={props.tableRef} />);
 
 export {
-  MTableAction, MTableActions, MTableBody, MTableCell, MTableEditRow,
+  MTableAction, MTableActions, MTableBody, MTableCell, MTableEditRow, MTableEditField,
   MTableFilterRow, MTableHeader, MTableSteppedPagination, MTablePagination,
   MTableBodyRow, MTableToolbar, MTableGroupRow
 };

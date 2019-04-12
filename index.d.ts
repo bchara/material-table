@@ -25,6 +25,7 @@ export interface MaterialTableProps {
   onRowClick?: (event?: React.MouseEvent, rowData?: any, toggleDetailPanel?: (panelIndex?: number) => void) => void;
   onRowSelected?: (rowData: any) => void;
   onSelectionChange?: (data: any[]) => void;
+  onTreeExpandChange?: (data: any, isExpanded: boolean) => void;
   tableRef?: any;
 }
 
@@ -68,12 +69,13 @@ export interface Column {
   defaultGroupOrder?: number;
   defaultGroupSort?: ('asc' | 'desc');
   defaultSort?: ('asc' | 'desc');
-  grouping?: boolean;
   disableClick?: boolean;
+  editComponent?: React.ComponentType<any>;
   emptyValue?: string | React.ReactElement<any> | ((data: any) => React.ReactElement<any> | string);
   export?: boolean;
   field?: string;
   filtering?: boolean;
+  grouping?: boolean;
   headerStyle?: React.CSSProperties;
   hidden?: boolean;
   lookup?: object;
@@ -92,6 +94,7 @@ export interface Components {
   Body?: React.ComponentType<any>;
   Cell?: React.ComponentType<any>;
   Container?: React.ComponentType<any>;
+  EditField?: React.ComponentType<any>;
   EditRow?: React.ComponentType<any>;
   FilterRow?: React.ComponentType<any>;
   Header?: React.ComponentType<any>;
@@ -108,6 +111,7 @@ export const MTableAction: () => React.ReactElement<any>;
 export const MTableActions: () => React.ReactElement<any>;
 export const MTableBody: () => React.ReactElement<any>;
 export const MTableCell: () => React.ReactElement<any>;
+export const MTableEditField: () => React.ReactElement<any>;
 export const MTableEditRow: () => React.ReactElement<any>;
 export const MTableFilterRow: () => React.ReactElement<any>;
 export const MTableHeader: () => React.ReactElement<any>;
@@ -139,6 +143,7 @@ export interface Icons {
 
 export interface Options {
   actionsColumnIndex?: number;
+  addRowPosition?: ('first' | 'last');
   columnsButton?: boolean;
   defaultExpanded?: boolean;
   debounceInterval?: number;
@@ -179,11 +184,11 @@ export interface Localization {
     filterRow?: {
       filterTooltip?: string;
     };
-    editRow?: {        
+    editRow?: {
       saveTooltip?: string;
       cancelTooltip?: string;
       deleteText?: string;
-    },      
+    },
     addTooltip?: string;
     deleteTooltip?: string;
     editTooltip?: string;

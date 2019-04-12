@@ -24,9 +24,7 @@ export class MTableToolbar extends React.Component {
 
     const data = this.props.renderData.map(rowData =>
       columns.map(columnDef => {
-        return columnDef.lookup
-          ? columnDef.lookup[rowData[columnDef.field]]
-          : rowData[columnDef.field];
+        return this.props.getFieldValue(rowData, columnDef);
       })
     );
 
@@ -181,7 +179,7 @@ export class MTableToolbar extends React.Component {
   render() {
     const { classes } = this.props;
     const localization = { ...MTableToolbar.defaultProps.localization, ...this.props.localization };
-    const title = this.props.showTitle ? (this.props.selectedRows && this.props.selectedRows.length > 0 ? localization.nRowsSelected.replace('{0}', this.props.selectedRows.length) : this.props.title) : null;
+    const title = this.props.selectedRows && this.props.selectedRows.length > 0 ? localization.nRowsSelected.replace('{0}', this.props.selectedRows.length) : this.props.showTitle ? this.props.title : null;
     return (
       <Toolbar className={classNames(classes.root, { [classes.highlight]: this.props.selectedRows && this.props.selectedRows.length > 0 })}>
         {title && <div className={classes.title}>
@@ -225,6 +223,7 @@ MTableToolbar.propTypes = {
   columns: PropTypes.array,
   columnsButton: PropTypes.bool,
   components: PropTypes.object.isRequired,
+  getFieldValue: PropTypes.func.isRequired,
   localization: PropTypes.object.isRequired,
   onColumnsChanged: PropTypes.func.isRequired,
   onSearchChanged: PropTypes.func.isRequired,

@@ -12,10 +12,10 @@ class MTableBody extends React.Component {
       if (this.props.options.selection || (this.props.actions && this.props.actions.filter(a => !a.isFreeAction && !this.props.options.selection).length > 0)) {
         addColumn++;
       }
-      if(this.props.hasDetailPanel) {
+      if (this.props.hasDetailPanel) {
         addColumn++;
       }
-      if(this.props.isTreeData) {
+      if (this.props.isTreeData) {
         addColumn++;
       }
       return (
@@ -79,6 +79,7 @@ class MTableBody extends React.Component {
             onEditingCanceled={this.props.onEditingCanceled}
             onEditingApproved={this.props.onEditingApproved}
             hasAnyEditingRow={this.props.hasAnyEditingRow}
+            treeDataMaxLevel={this.props.treeDataMaxLevel}
           />
         );
       }
@@ -140,14 +141,33 @@ class MTableBody extends React.Component {
             isTreeData={this.props.isTreeData}
           />
         }
+
+        {this.props.showAddRow && this.props.options.addRowPosition === "first" &&
+          <this.props.components.EditRow
+            columns={this.props.columns.filter(columnDef => { return !columnDef.hidden })}
+            data={this.props.initialFormData}
+            components={this.props.components}
+            icons={this.props.icons}
+            key="key-add-row"
+            mode="add"
+            localization={{ ...MTableBody.defaultProps.localization.editRow, ...this.props.localization.editRow }}
+            options={this.props.options}
+            isTreeData={this.props.isTreeData}
+            detailPanel={this.props.detailPanel}
+            onEditingCanceled={this.props.onEditingCanceled}
+            onEditingApproved={this.props.onEditingApproved}
+          />
+        }
+
         {groups.length > 0 ?
           this.renderGroupedRows(groups, renderData) :
           this.renderUngroupedRows(renderData)
         }
 
-        {this.props.showAddRow &&
+        {this.props.showAddRow && this.props.options.addRowPosition === "last" &&
           <this.props.components.EditRow
             columns={this.props.columns.filter(columnDef => { return !columnDef.hidden })}
+            data={this.props.initialFormData}
             components={this.props.components}
             icons={this.props.icons}
             key="key-add-row"
@@ -194,8 +214,10 @@ MTableBody.propTypes = {
   options: PropTypes.object.isRequired,
   pageSize: PropTypes.number,
   renderData: PropTypes.array,
+  initialFormData: PropTypes.object,
   selection: PropTypes.bool.isRequired,
   showAddRow: PropTypes.bool,
+  treeDataMaxLevel: PropTypes.number,
   onFilterSelectionChanged: PropTypes.func.isRequired,
   localization: PropTypes.object,
   onFilterChanged: PropTypes.func,
