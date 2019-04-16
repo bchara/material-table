@@ -39,6 +39,7 @@ export default class DataManager {
   paged = false;
 
   constructor() {
+    //console.log('constructor of DataManager');
   }
 
   setData(data) {
@@ -65,6 +66,24 @@ export default class DataManager {
         id: index
       };
       return columnDef;
+    });
+  }
+
+  
+  setColumnsLookups(columns) {
+    //console.log('setColumnsLookups');
+
+    this.columns = columns.map( col => {
+
+      if ( col.doLookup ) {
+        col.lookup = this.data.reduce( (acc, row) => {
+          if ( !acc[  row[ col['field'] ] ] ) {
+            acc[ row[ col['field'] ] ] = this.getFieldValue(row, col);
+          }
+          return acc;
+        }, {});
+      }
+      return col;
     });
   }
 
@@ -102,7 +121,17 @@ export default class DataManager {
   }
 
   changeFilterValue(columnId, value) {
+    //console.log('changeFitlerValue: value is: ', value);
     this.columns[columnId].tableData.filterValue = value;
+    this.columns = this.columns.map( col => {
+      if ( col.lookup ) {
+        col.doLookupAdaptive = true
+      }
+      return col;
+    })
+    if ( Array.isArray(value) && value.length ) {
+      this.columns[columnId].doLookupAdaptive = false;
+    }
     this.filtered = false;
   }
 
@@ -436,9 +465,11 @@ export default class DataManager {
   // =====================================================================================================
 
   filterData = () => {
+    //console.log('filterData');
     this.searched = this.grouped = this.treefied = this.sorted = this.paged = false;
 
     this.filteredData = [...this.data];
+    //console.log('filtered data is: ', this.filteredData);
 
     // if (this.filterSelectionChecked) {
     //   this.filterData = this.filterData.filter(row => {
@@ -447,19 +478,27 @@ export default class DataManager {
     // }
 
     if (this.applyFilters) {
+      //console.log('columns are: ', this.columns);
       this.columns.filter(columnDef => columnDef.tableData.filterValue).forEach(columnDef => {
         const { lookup, type, tableData } = columnDef;
         if (columnDef.customFilterAndSearch) {
+          //console.log('customFitlerAndSearch');
           this.filteredData = this.filteredData.filter(row => !!columnDef.customFilterAndSearch(tableData.filterValue, row, columnDef));
         }
         else {
+          //console.log('NO custom filter');
           if (lookup) {
+            //console.log('yes lookup');
             this.filteredData = this.filteredData.filter(row => {
-              const value = this.getFieldValue(row, columnDef);
+              //const value = this.getFieldValue(row, columnDef);
+              const value = row[ columnDef.field ];
+              //console.log('value is: ', value);
+              //console.log('tableData.filterValue is: ', tableData.filterValue);
               return !tableData.filterValue ||
                 tableData.filterValue.length === 0 ||
-                tableData.filterValue.indexOf(value !== undefined && value.toString()) > -1;
+                tableData.filterValue.join('').indexOf(value !== undefined && value.toString()) > -1;
             });
+            //console.log('New filtered data is: ', this.filteredData);
           } else if (type === 'numeric') {
             this.filteredData = this.filteredData.filter(row => {
               const value = this.getFieldValue(row, columnDef);
@@ -517,6 +556,29 @@ export default class DataManager {
           }
         }
       });
+      
+      //console.log('finished filtering');
+      //console.log('columns are: ', this.columns);
+      
+      this.columns = this.columns.map( col => {
+        if ( col.lookup && col.doLookupAdaptive  ) {
+        //if ( col.lookup && (!Array.isArray(col.tableData.filterValue) || !col.tableData.filterValue.length) ) {
+          col.lookupAdaptive = Object.entries(col.lookup).map( (lookupPair) => {
+            if (this.filteredData.filter( data => data[col.field] == lookupPair[0] ).length )
+              return [ lookupPair[0], false ]
+            else
+              return [ lookupPair[0], true ]
+          }).reduce( (acc, [k,v]) => {
+            acc[k]=v;
+            return acc;
+          }, {});
+        }
+        return col;
+      });
+      
+
+      //console.log('new columns are: ', this.columns);
+      
     }
 
     this.filtered = true;

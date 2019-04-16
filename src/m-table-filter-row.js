@@ -21,6 +21,7 @@ const MenuProps = {
   }
 };
 
+
 class MTableFilterRow extends React.Component {
   renderLookupFilter = (columnDef) => (
     <FormControl style={{ width: '100%' }}>
@@ -28,6 +29,7 @@ class MTableFilterRow extends React.Component {
         multiple
         value={columnDef.tableData.filterValue || []}
         onChange={event => {
+          //console.log('onFilterChanged');
           this.props.onFilterChanged(columnDef.tableData.id, event.target.value);
         }}
         input={<Input id="select-multiple-checkbox" />}
@@ -35,12 +37,18 @@ class MTableFilterRow extends React.Component {
         MenuProps={MenuProps}
       >
         {
-          Object.keys(columnDef.lookup).map(key => (
-            <MenuItem key={key} value={key}>
-              <Checkbox checked={columnDef.tableData.filterValue ? columnDef.tableData.filterValue.indexOf(key.toString()) > -1 : false} />
-              <ListItemText primary={columnDef.lookup[key]} />
-            </MenuItem>
-          ))
+          Object.keys(columnDef.lookup).map(key => {
+            if ( columnDef.lookupAdaptive && columnDef.lookupAdaptive[key] ) {
+              return null;
+            } else {
+              return (
+                <MenuItem key={key} value={key}>
+                  <Checkbox checked={columnDef.tableData.filterValue ? columnDef.tableData.filterValue.indexOf(key.toString()) > -1 : false} />
+                  <ListItemText primary={columnDef.lookup[key]} />
+                </MenuItem>
+                )
+            }
+            })
         }
       </Select>
     </FormControl>

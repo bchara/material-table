@@ -27,6 +27,7 @@ class MaterialTable extends React.Component {
   dataManager = new DataManager();
 
   constructor(props) {
+    //console.log('constructor of MaterialTable');
     super(props);
 
     const calculatedProps = this.getProps(props);
@@ -57,6 +58,10 @@ class MaterialTable extends React.Component {
     });
   }
 
+  getLog (msg) {
+    console.log(msg);
+  }
+
   setDataManagerFields(props, isInit) {
     let defaultSortColumnIndex = -1;
     let defaultSortDirection = '';
@@ -78,6 +83,7 @@ class MaterialTable extends React.Component {
       this.dataManager.setData(props.data);
     }
 
+    isInit && this.dataManager.setColumnsLookups(props.columns);
     isInit && this.dataManager.changeOrder(defaultSortColumnIndex, defaultSortDirection);
     isInit && this.dataManager.changeCurrentPage(props.options.initialPage ? props.options.initialPage : 0);
     isInit && this.dataManager.changePageSize(props.options.pageSize);
@@ -216,7 +222,9 @@ class MaterialTable extends React.Component {
   }, this.props.options.debounceInterval)
 
   onFilterChange = debounce(() => {
+    //console.log('FilterChangeHandler');
     if (this.isRemoteData()) {
+      //console.log('isRemoteData');
       const query = { ...this.state.query };
       query.filters = this.state.columns
         .filter(a => a.tableData.filterValue)
@@ -229,6 +237,7 @@ class MaterialTable extends React.Component {
       this.onQueryChange(query);
     }
     else {
+      //console.log('Is not RemoteData');
       this.setState(this.dataManager.getRenderState());
     }
   }, this.props.options.debounceInterval)
