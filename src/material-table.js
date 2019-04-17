@@ -58,10 +58,6 @@ class MaterialTable extends React.Component {
     });
   }
 
-  getLog (msg) {
-    console.log(msg);
-  }
-
   setDataManagerFields(props, isInit) {
     let defaultSortColumnIndex = -1;
     let defaultSortDirection = '';
@@ -83,7 +79,7 @@ class MaterialTable extends React.Component {
       this.dataManager.setData(props.data);
     }
 
-    isInit && this.dataManager.setColumnsLookups(props.columns);
+    this.dataManager.setColumnsLookups(props.columns);
     isInit && this.dataManager.changeOrder(defaultSortColumnIndex, defaultSortDirection);
     isInit && this.dataManager.changeCurrentPage(props.options.initialPage ? props.options.initialPage : 0);
     isInit && this.dataManager.changePageSize(props.options.pageSize);

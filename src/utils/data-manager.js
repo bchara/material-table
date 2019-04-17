@@ -77,7 +77,7 @@ export default class DataManager {
 
       if ( col.doLookup ) {
         col.lookup = this.data.reduce( (acc, row) => {
-          if ( !acc[  row[ col['field'] ] ] ) {
+          if ( !acc[ row[ col['field'] ] ] ) {
             acc[ row[ col['field'] ] ] = this.getFieldValue(row, col);
           }
           return acc;
@@ -125,10 +125,10 @@ export default class DataManager {
     this.columns[columnId].tableData.filterValue = value;
     this.columns = this.columns.map( col => {
       if ( col.lookup ) {
-        col.doLookupAdaptive = true
+        col.doLookupAdaptive = true;
       }
       return col;
-    })
+    });
     if ( Array.isArray(value) && value.length ) {
       this.columns[columnId].doLookupAdaptive = false;
     }
@@ -565,9 +565,9 @@ export default class DataManager {
         //if ( col.lookup && (!Array.isArray(col.tableData.filterValue) || !col.tableData.filterValue.length) ) {
           col.lookupAdaptive = Object.entries(col.lookup).map( (lookupPair) => {
             if (this.filteredData.filter( data => data[col.field] == lookupPair[0] ).length )
-              return [ lookupPair[0], false ]
+              return [ lookupPair[0], false ];
             else
-              return [ lookupPair[0], true ]
+              return [ lookupPair[0], true ];
           }).reduce( (acc, [k,v]) => {
             acc[k]=v;
             return acc;

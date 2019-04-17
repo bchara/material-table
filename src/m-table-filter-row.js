@@ -46,7 +46,7 @@ class MTableFilterRow extends React.Component {
                   <Checkbox checked={columnDef.tableData.filterValue ? columnDef.tableData.filterValue.indexOf(key.toString()) > -1 : false} />
                   <ListItemText primary={columnDef.lookup[key]} />
                 </MenuItem>
-                )
+                );
             }
             })
         }
